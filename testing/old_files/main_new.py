@@ -79,7 +79,7 @@ with gr.Blocks() as demo:
 
     gr.Markdown("### Enter the names of the people involved separated by a comma")
     
-    # Step 2: Get people involved
+    # Get people involved
     def get_names(names_in):
         names_in = names_in.split(",")
         people_inputs = [x.strip() for x in names_in]
@@ -174,9 +174,6 @@ with gr.Blocks() as demo:
 
     get_debt_button = gr.Button(value = "Get final amount owed", render = True)
 
-    # gr.DataFrame(label = "Debt Matrix", value = df_debt_state)
-
-    # rendering function to check whether the df is being updated correctly
     @gr.render(inputs = [df_state, df_debt_state, amount_owed_state, payer_state], triggers = [get_debt_button.click])
     def show_df(df_state, df_debt_state, amount_owed_state, payer_state):
         amount_owed_box = gr.Textbox(label = "Total amount owed to payer by others 🤑🤑", value = f"{payer_state} will get: {amount_owed_state}", render = True)
@@ -188,6 +185,5 @@ with gr.Blocks() as demo:
 
         gr.Markdown("### Final overall DF")
         gr.DataFrame(df_state, interactive=False, render = True)
-    
 
 demo.launch()

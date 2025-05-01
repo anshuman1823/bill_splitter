@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import gradio as gr
 import numpy as np
-
 import re
 
 def save_bill_excel(df):
