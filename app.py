@@ -3,9 +3,11 @@ import pandas as pd
 import numpy as np
 import gradio as gr
 import re
+from ocr import extract_text_from_bill
 
 def save_bill_excel(df):
     df.to_excel(os.path.join(os.getcwd(), "bills_input", "bills_input.xlsx"), index=False)
+    return None
 
 bill_txt_path = os.path.join(os.getcwd(), "bills_input", "bill_input_text.txt")
 
@@ -85,6 +87,23 @@ def generate_debt_df(df_state, df_debt_state, people_state, payer_state, item_co
     total_amount_owed = df_debt_state.amount_owed.sum()
     return df_debt_state, total_amount_owed
 
+def save_text_file(text, path = bill_txt_path):
+    """
+    Save the passed text as a text file
+    """
+    if path is None:
+        path = os.path.join(os.getcwd(), "bills_input", "bill_input_text.txt")
+    
+    if text is None:
+        print(f"Bill text passed to save_text_file function is None")
+    else:
+        with open(path, "w") as file:
+            file.write(text)
+
+def update_ocr_input():
+    df = extract_bill_items()
+    return gr.update(value = df)
+
 # def assign_supermarket(supermarket):
 #     return supermarket
     
@@ -93,17 +112,29 @@ def generate_debt_df(df_state, df_debt_state, people_state, payer_state, item_co
 
 with gr.Blocks() as app:
 
+    with gr.Tab("Read Bill"):
+        ocr_textbox = gr.Textbox(label = "Text captured from the bil via OCR", interactive = True)
+        gr.Interface(fn = extract_text_from_bill, inputs=["image"], outputs = [ocr_textbox])
+        
+        save_bill_text_button = gr.Button(value = "Save OCR Text")
+        save_bill_text_button.click(fn=save_text_file, inputs = ocr_textbox)
+
     # supermarket_state = gr.State("")
     # bill_date_state = gr.State("")
 
     with gr.Tab("Process Bill"):
+
         df_bill = extract_bill_items()
     
         gr.Markdown("# Make changes to the input items/cost")
-        gr.Markdown("## When all changes are done in items/cost, go to 'Bill Splitter' tab")
-        gr.Markdown("### ⚠️ Press 'Submit Changes' button after making any changes to Save the changes ⚠️ ")
-        # refresh_button = gr.Button("Re-read bill")
-
+        gr.Markdown("### Guide:")
+        gr.Markdown("#### Press 'Submit/View-Total' to view the total bill cost")
+        gr.Markdown("#### ⚠️ Also press 'Submit/View-Total' button after making any changes to Save the changes ⚠️ ")
+        gr.Markdown("#### Press 'Refresh' to refresh the ocr text input")
+        gr.Markdown("#### When done, proceed to the next tab 'Bill Splitter'")
+        
+        refresh_button = gr.Button(value = "Refresh OCR input")
+        
         dataframe = gr.Dataframe(
             headers=["Item", "Cost"],
             datatype=["str", "number"],
@@ -113,8 +144,10 @@ with gr.Blocks() as app:
             value=df_bill,
         )
 
+        refresh_button.click(update_ocr_input, outputs = dataframe)
+
         sum_textbox = gr.Textbox(label="Total bill Cost", interactive=False)
-        submit_btn = gr.Button("Submit Changes")
+        submit_btn = gr.Button("Submit/View-Total")
 
         submit_btn.click(
             update_dataframe,
@@ -148,6 +181,8 @@ with gr.Blocks() as app:
             return df_state
         
         people_textbox = gr.Textbox(label="Enter names (comma-separated):", interactive=True)
+        restart_button = gr.Button(value = "Restart-Entry")
+        gr.Markdown("#### Note: Remember to reselect the payer from the dropdown after pressing Restart-Entry")
         submit_btn = gr.Button("Submit People Names")
         name_output = gr.Textbox(label="People involved in the shopping", render=True)
 
@@ -165,6 +200,13 @@ with gr.Blocks() as app:
                     add_cont_cols, inputs=[df_state, people_state], outputs=df_state)
         name_output.change(payer_select, inputs=name_output, outputs=payer_drop)
         payer_drop.change(show_payer, inputs=payer_drop, outputs=[payer_text, payer_state])
+
+        restart_button.click(read_bill, inputs = [df_state], outputs = [df_state]).then(
+            lambda x: 0, inputs = item_count_state, outputs=item_count_state).then(
+                lambda x:[], inputs = people_state, outputs=people_state).then(
+                    # lambda x:"", inputs = payer_state, outputs = payer_state).then(
+                        lambda x: pd.DataFrame(columns=["people", "amount_owed"]), inputs = df_debt_state, outputs=df_debt_state).then(
+                            lambda x: read_bill_csv(), inputs=df_state, outputs=df_state)
 
         gr.Markdown("### Enter who was involved in which item purchase")
         start_involvement = gr.Button("start entering involvement")
