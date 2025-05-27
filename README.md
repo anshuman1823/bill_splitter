@@ -26,3 +26,11 @@ You could add a section like this if you plan to extend the project:
 	•	Support for multiple payers
 	•	Bill image rotation and cropping
 	•	Group saving for recurring expenses
+
+<img width="1262" alt="image" src="https://github.com/user-attachments/assets/051b7044-31e3-4e53-8f8d-14c08c63109b" />
+<img width="1302" alt="image" src="https://github.com/user-attachments/assets/341e89f6-7fc0-4651-8bcb-303de167a6f6" />
+<img width="1274" alt="image" src="https://github.com/user-attachments/assets/448deeb6-ab6f-4dba-9296-9f29f703969e" />
+
+
+
+
